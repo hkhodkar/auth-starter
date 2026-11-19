@@ -1,0 +1,216 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>{{ greeting() }}, {{ firstName() }}</h1>
+      <p class="subtitle">Your account, your session and what your role allows.</p>
+    </div>
+    @if (auth.user(); as user) {
+      <span class="role-chip" [class.admin]="user.role === 'admin'">
+        <app-icon [name]="user.role === 'admin' ? 'shield-check' : 'user'" [size]="16" />
+        Signed in as {{ user.role === 'admin' ? 'admin' : 'user' }}
+      </span>
+    }
+  </header>
+
+  <ng-container *appHasRole="'admin'">
+    <section class="stats" aria-label="User statistics">
+      @if (stats(); as s) {
+        <div class="card stat">
+          <span class="stat-icon"><app-icon name="users" /></span>
+          <div>
+            <p class="stat-label">Total users</p>
+            <p class="stat-value num">{{ s.total }}</p>
+          </div>
+        </div>
+        <div class="card stat">
+          <span class="stat-icon success"><app-icon name="user-check" /></span>
+          <div>
+            <p class="stat-label">Active</p>
+            <p class="stat-value num">{{ s.active }}</p>
+          </div>
+        </div>
+        <div class="card stat">
+          <span class="stat-icon admin"><app-icon name="shield" /></span>
+          <div>
+            <p class="stat-label">Admins</p>
+            <p class="stat-value num">{{ s.admins }}</p>
+          </div>
+        </div>
+        <div class="card stat">
+          <span class="stat-icon warning"><app-icon name="user-plus" /></span>
+          <div>
+            <p class="stat-label">New this week</p>
+            <p class="stat-value num">{{ s.new_this_week }}</p>
+          </div>
+        </div>
+      } @else if (statsError(); as message) {
+        <div class="card form-error">{{ message }}</div>
+      } @else {
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="card stat skeleton" aria-hidden="true"></div>
+        }
+      }
+    </section>
+  </ng-container>
+
+  <div class="grid">
+    <div class="column">
+      <section class="card session" aria-labelledby="session-title">
+        <div class="card-header">
+          <h2 id="session-title">Session</h2>
+          <span class="badge" [class.badge-active]="!expired()" [class.badge-inactive]="expired()">
+            <span class="dot"></span>
+            {{ expired() ? 'Token expired' : 'Token valid' }}
+          </span>
+        </div>
+
+        <div class="countdown">
+          <div>
+            <p class="countdown-label">Access token expires in</p>
+            <p class="countdown-value num" [class.expired]="expired()">{{ countdown() }}</p>
+          </div>
+          <button type="button" class="btn" [disabled]="refreshing()" (click)="refreshNow()">
+            @if (refreshing()) {
+              <span class="spinner" aria-hidden="true"></span>
+            } @else {
+              <app-icon name="refresh" [size]="16" />
+            }
+            Refresh now
+          </button>
+        </div>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Access token lifetime left"
+          [attr.aria-valuenow]="secondsLeft()"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="lifetime()"
+        >
+          <span [style.width.%]="progress()"></span>
+        </div>
+        <p class="hint">
+          @if (expired()) {
+            The next API call gets a 401, the interceptor swaps the refresh token for a new pair and
+            retries it. Open another page to see it happen.
+          } @else {
+            When it runs out, the next API call is retried with a fresh token automatically.
+          }
+        </p>
+
+        <dl class="session-facts">
+          <div>
+            <dt>Expires at</dt>
+            <dd>{{ auth.accessTokenExpiresAt() | date: 'HH:mm:ss' }}</dd>
+          </div>
+          <div>
+            <dt>Token lifetime</dt>
+            <dd>{{ lifetime() ? lifetime() + ' s' : '–' }}</dd>
+          </div>
+          <div>
+            <dt>Refreshed in this tab</dt>
+            <dd class="num">
+              {{ auth.refreshCount() }} {{ auth.refreshCount() === 1 ? 'time' : 'times' }}
+            </dd>
+          </div>
+        </dl>
+
+        <button
+          type="button"
+          class="claims-toggle"
+          aria-controls="token-claims"
+          [attr.aria-expanded]="showClaims()"
+          (click)="toggleClaims()"
+        >
+          <app-icon [name]="showClaims() ? 'chevron-up' : 'chevron-down'" [size]="16" />
+          {{ showClaims() ? 'Hide' : 'Show' }} decoded access token
+        </button>
+        @if (showClaims()) {
+          <pre id="token-claims" class="claims code">{{ token()?.claims | json }}</pre>
+        }
+      </section>
+
+      <section class="card" aria-labelledby="flow-title">
+        <div class="card-header">
+          <h2 id="flow-title">How the token flow works</h2>
+        </div>
+        <ol class="flow list-plain">
+          @for (step of flow; track step.title; let i = $index) {
+            <li>
+              <span class="step-number">{{ i + 1 }}</span>
+              <div>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.text }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+
+    <div class="side">
+      @if (auth.user(); as user) {
+        <section class="card" aria-labelledby="account-title">
+          <div class="card-header">
+            <h2 id="account-title">Account</h2>
+            <a class="btn btn-sm" routerLink="/profile">Edit profile</a>
+          </div>
+          <dl class="meta-list">
+            <div>
+              <dt>Email</dt>
+              <dd>{{ user.email }}</dd>
+            </div>
+            <div>
+              <dt>Role</dt>
+              <dd>
+                <span
+                  class="badge"
+                  [class.badge-admin]="user.role === 'admin'"
+                  [class.badge-user]="user.role === 'user'"
+                >
+                  {{ user.role === 'admin' ? 'Admin' : 'User' }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>Member since</dt>
+              <dd>{{ memberSince() | date: 'mediumDate' }}</dd>
+            </div>
+            <div>
+              <dt>Last sign-in</dt>
+              <dd>{{ lastLogin() }}</dd>
+            </div>
+          </dl>
+        </section>
+      }
+
+      <section class="card" aria-labelledby="permissions-title">
+        <div class="card-header">
+          <h2 id="permissions-title">What your role can do</h2>
+        </div>
+        <ul class="permissions list-plain">
+          @for (permission of permissions(); track permission.label) {
+            <li [class.denied]="!permission.allowed">
+              <app-icon [name]="permission.icon" [size]="16" />
+              <span>{{ permission.label }}</span>
+              @if (permission.allowed) {
+                <app-icon class="state allowed" name="check" [size]="16" />
+                <span class="visually-hidden">allowed</span>
+              } @else {
+                <app-icon class="state" name="lock" [size]="15" />
+                <span class="visually-hidden">admins only</span>
+              }
+            </li>
+          }
+        </ul>
+        <a *appHasRole="'admin'" class="btn btn-primary manage" routerLink="/admin/users">
+          <app-icon name="users" [size]="16" />
+          Manage users
+        </a>
+        <p *appHasRole="'user'" class="hint">
+          Admin pages are hidden from the menu and guarded by route, try
+          <a routerLink="/admin/users">/admin/users</a> to see the 403 page.
+        </p>
+      </section>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,123 @@
+.users-table {
+  tr.inactive .cell-main {
+    opacity: 0.6;
+  }
+}
+
+.cell-text {
+  min-width: 0;
+
+  strong {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.you {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.danger-outline {
+  color: var(--danger);
+
+  &:hover:not(:disabled) {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+}
+
+.self-note {
+  color: var(--text-subtle);
+  font-size: 13px;
+}
+
+.mobile-sort {
+  display: none;
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+// phones: each row becomes a small card
+@media (max-width: 760px) {
+  .mobile-sort {
+    display: block;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  .users-table {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    tbody tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px 12px;
+      padding: 16px;
+    }
+
+    td,
+    td:first-child,
+    td:last-child {
+      padding: 0;
+      white-space: normal;
+    }
+
+    td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 2px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .user-cell,
+    .actions {
+      grid-column: 1 / -1;
+    }
+
+    .actions {
+      width: auto;
+      text-align: left;
+    }
+
+    .row-actions {
+      justify-content: stretch;
+
+      .btn {
+        flex: 1;
+      }
+    }
+  }
+}

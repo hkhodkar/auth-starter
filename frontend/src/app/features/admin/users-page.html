@@ -1,0 +1,193 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Users</h1>
+      <p class="subtitle">Manage roles and access. Only admins can see this page.</p>
+    </div>
+  </header>
+
+  <section class="card card-flush">
+    <div class="toolbar">
+      <label class="input-icon search">
+        <span class="visually-hidden">Search users</span>
+        <app-icon name="search" [size]="16" />
+        <input
+          class="input"
+          type="search"
+          placeholder="Search by name or email"
+          [value]="search()"
+          (input)="onSearch($event)"
+        />
+      </label>
+      <label>
+        <span class="visually-hidden">Role</span>
+        <select class="select" [value]="role()" (change)="onRole($event)">
+          <option value="">All roles</option>
+          <option value="admin">Admins</option>
+          <option value="user">Users</option>
+        </select>
+      </label>
+      <label>
+        <span class="visually-hidden">Status</span>
+        <select class="select" [value]="status()" (change)="onStatus($event)">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Deactivated</option>
+        </select>
+      </label>
+      <label class="mobile-sort">
+        <span class="visually-hidden">Sort</span>
+        <select class="select" [value]="sort()" (change)="onSortSelect($event)">
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      @if (hasFilters()) {
+        <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">
+          Clear filters
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="loading-bar" aria-hidden="true"></div>
+    }
+
+    @if (error(); as message) {
+      <div class="empty-state text-danger" role="alert">{{ message }}</div>
+    } @else if (result(); as data) {
+      @if (data.items.length) {
+        <div class="table-wrap">
+          <table class="table users-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  <app-sort-header key="full_name" [sort]="sort()" (sortChange)="onSort($event)"
+                    >User</app-sort-header
+                  >
+                </th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">
+                  <app-sort-header
+                    key="created_at"
+                    [descFirst]="true"
+                    [sort]="sort()"
+                    (sortChange)="onSort($event)"
+                    >Joined</app-sort-header
+                  >
+                </th>
+                <th scope="col">
+                  <app-sort-header
+                    key="last_login_at"
+                    [descFirst]="true"
+                    [sort]="sort()"
+                    (sortChange)="onSort($event)"
+                    >Last sign-in</app-sort-header
+                  >
+                </th>
+                <th scope="col" class="actions"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of data.items; track user.id) {
+                <tr [class.inactive]="!user.is_active">
+                  <td class="user-cell">
+                    <div class="cell-main">
+                      <app-avatar [name]="user.full_name" [size]="36" />
+                      <div class="cell-text">
+                        <strong>
+                          {{ user.full_name }}
+                          @if (isSelf(user)) {
+                            <span class="you">You</span>
+                          }
+                        </strong>
+                        <small>{{ user.email }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Role">
+                    <span
+                      class="badge"
+                      [class.badge-admin]="user.role === 'admin'"
+                      [class.badge-user]="user.role === 'user'"
+                    >
+                      {{ user.role === 'admin' ? 'Admin' : 'User' }}
+                    </span>
+                  </td>
+                  <td data-label="Status">
+                    <span
+                      class="badge"
+                      [class.badge-active]="user.is_active"
+                      [class.badge-inactive]="!user.is_active"
+                    >
+                      <span class="dot"></span>
+                      {{ user.is_active ? 'Active' : 'Deactivated' }}
+                    </span>
+                  </td>
+                  <td data-label="Joined">{{ user.created_at | date: 'mediumDate' }}</td>
+                  <td
+                    data-label="Last sign-in"
+                    [title]="(user.last_login_at | date: 'medium') ?? 'Never signed in'"
+                  >
+                    {{ lastSeen(user) }}
+                  </td>
+                  <td class="actions">
+                    @if (isSelf(user)) {
+                      <span class="self-note">Your account</span>
+                    } @else {
+                      <div class="row-actions">
+                        <button type="button" class="btn btn-sm" (click)="askRoleChange(user)">
+                          <app-icon
+                            [name]="user.role === 'admin' ? 'user' : 'shield'"
+                            [size]="15"
+                          />
+                          {{ user.role === 'admin' ? 'Make user' : 'Make admin' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm"
+                          [class.danger-outline]="user.is_active"
+                          (click)="askStatusChange(user)"
+                        >
+                          <app-icon [name]="user.is_active ? 'user-x' : 'user-check'" [size]="15" />
+                          {{ user.is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination
+          [page]="data.page"
+          [pageSize]="pageSize"
+          [total]="data.total"
+          (pageChange)="onPage($event)"
+        />
+      } @else {
+        <div class="empty-state">
+          <p>No users match these filters.</p>
+          <button type="button" class="btn btn-sm" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+    } @else {
+      <div class="empty-state">Loading users…</div>
+    }
+  </section>
+</div>
+
+@if (pending(); as change) {
+  <app-confirm-dialog
+    [title]="change.title"
+    [message]="change.message"
+    [confirmLabel]="change.confirmLabel"
+    [danger]="change.changes.is_active === false"
+    [busy]="saving()"
+    (confirmed)="confirmChange()"
+    (cancelled)="cancelChange()"
+  />
+}

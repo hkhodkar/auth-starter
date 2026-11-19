@@ -1,0 +1,193 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Profile</h1>
+      <p class="subtitle">Update your details and keep your account secure.</p>
+    </div>
+  </header>
+
+  @if (auth.user(); as user) {
+    <section class="card identity" aria-label="Your account">
+      <app-avatar [name]="user.full_name" [size]="64" />
+      <div class="identity-text">
+        <h2>{{ user.full_name }}</h2>
+        <p class="text-muted">{{ user.email }}</p>
+      </div>
+      <dl class="identity-meta">
+        <div>
+          <dt>Role</dt>
+          <dd>
+            <span
+              class="badge"
+              [class.badge-admin]="user.role === 'admin'"
+              [class.badge-user]="user.role === 'user'"
+            >
+              {{ user.role === 'admin' ? 'Admin' : 'User' }}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>Member since</dt>
+          <dd>{{ user.created_at | date: 'mediumDate' }}</dd>
+        </div>
+      </dl>
+    </section>
+  }
+
+  <div class="forms">
+    <section class="card" aria-labelledby="details-title">
+      <div class="card-header">
+        <div>
+          <h2 id="details-title">Personal details</h2>
+          <p class="card-subtitle">Your name and the email you sign in with.</p>
+        </div>
+      </div>
+
+      <form class="form-stack" [formGroup]="details" (ngSubmit)="saveDetails()" novalidate>
+        @if (detailsError(); as message) {
+          <div class="form-error" role="alert">{{ message }}</div>
+        }
+
+        <div class="field">
+          <label for="profile-name">Full name</label>
+          <input
+            id="profile-name"
+            class="input"
+            type="text"
+            formControlName="fullName"
+            autocomplete="name"
+            [attr.aria-invalid]="!!detailsErrorFor('fullName', 'Full name')"
+          />
+          @if (detailsErrorFor('fullName', 'Full name'); as message) {
+            <span class="field-error">{{ message }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="profile-email">Email</label>
+          <input
+            id="profile-email"
+            class="input"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            [attr.aria-invalid]="!!detailsErrorFor('email', 'Email')"
+          />
+          @if (detailsErrorFor('email', 'Email'); as message) {
+            <span class="field-error">{{ message }}</span>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn"
+            [disabled]="details.pristine || savingDetails()"
+            (click)="resetDetails()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="details.pristine || savingDetails()"
+          >
+            @if (savingDetails()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+            Save changes
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="password-title">
+      <div class="card-header">
+        <div>
+          <h2 id="password-title">Change password</h2>
+          <p class="card-subtitle">Other devices are signed out when you change it.</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-ghost"
+          [attr.aria-pressed]="showPasswords()"
+          (click)="togglePasswords()"
+        >
+          <app-icon [name]="showPasswords() ? 'eye-off' : 'eye'" [size]="16" />
+          {{ showPasswords() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+
+      <form
+        #passwordForm="ngForm"
+        class="form-stack"
+        [formGroup]="passwords"
+        (ngSubmit)="changePassword(passwordForm)"
+        novalidate
+      >
+        @if (passwordError(); as message) {
+          <div class="form-error" role="alert">{{ message }}</div>
+        }
+
+        <div class="field">
+          <label for="current-password">Current password</label>
+          <input
+            id="current-password"
+            class="input"
+            [type]="showPasswords() ? 'text' : 'password'"
+            formControlName="currentPassword"
+            autocomplete="current-password"
+            [attr.aria-invalid]="!!passwordErrorFor('currentPassword', 'Current password')"
+          />
+          @if (passwordErrorFor('currentPassword', 'Current password'); as message) {
+            <span class="field-error">{{ message }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="new-password">New password</label>
+          <input
+            id="new-password"
+            class="input"
+            [type]="showPasswords() ? 'text' : 'password'"
+            formControlName="newPassword"
+            autocomplete="new-password"
+            placeholder="At least 8 characters"
+            aria-describedby="new-password-strength"
+            [attr.aria-invalid]="!!passwordErrorFor('newPassword', 'New password')"
+          />
+          @if (passwordErrorFor('newPassword', 'New password'); as message) {
+            <span class="field-error">{{ message }}</span>
+          }
+          <app-password-strength id="new-password-strength" [password]="newPassword()" />
+        </div>
+
+        <div class="field">
+          <label for="confirm-password">Confirm new password</label>
+          <input
+            id="confirm-password"
+            class="input"
+            [type]="showPasswords() ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            [attr.aria-invalid]="!!passwordErrorFor('confirmPassword', 'Confirmation')"
+          />
+          @if (passwordErrorFor('confirmPassword', 'Password confirmation'); as message) {
+            <span class="field-error">{{ message }}</span>
+          }
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="savingPassword()">
+            @if (savingPassword()) {
+              <span class="spinner" aria-hidden="true"></span>
+            } @else {
+              <app-icon name="lock" [size]="16" />
+            }
+            Update password
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
