@@ -1,0 +1,85 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand-logo"><app-icon name="shield" [size]="17" /></span>
+      <span>Auth Starter</span>
+    </a>
+
+    <button
+      type="button"
+      class="menu-btn"
+      aria-controls="main-menu"
+      [attr.aria-expanded]="menuOpen()"
+      aria-label="Toggle navigation"
+      (click)="toggleMenu()"
+    >
+      <app-icon [name]="menuOpen() ? 'x' : 'menu'" />
+    </button>
+
+    <div id="main-menu" class="menu" [class.open]="menuOpen()">
+      <nav class="nav" aria-label="Main">
+        <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">
+          <app-icon name="dashboard" [size]="17" />
+          Dashboard
+        </a>
+        <a class="nav-link" routerLink="/profile" routerLinkActive="active">
+          <app-icon name="user" [size]="17" />
+          Profile
+        </a>
+        <a
+          *appHasRole="'admin'"
+          class="nav-link"
+          routerLink="/admin/users"
+          routerLinkActive="active"
+        >
+          <app-icon name="users" [size]="17" />
+          Users
+        </a>
+        @if (demo.active()) {
+          <a
+            class="nav-link"
+            href="https://github.com/hkhodkar/auth-starter"
+            target="_blank"
+            rel="noopener"
+          >
+            <app-icon name="code" [size]="17" />
+            Source
+          </a>
+        } @else {
+          <a class="nav-link" href="/docs" target="_blank" rel="noopener">
+            <app-icon name="external" [size]="17" />
+            API docs
+          </a>
+        }
+      </nav>
+
+      @if (auth.user(); as user) {
+        <div class="account">
+          <a class="account-link" routerLink="/profile" title="Your profile">
+            <app-avatar [name]="user.full_name" [size]="34" />
+            <span class="account-text">
+              <strong>{{ user.full_name }}</strong>
+              <small>{{ user.email }}</small>
+            </span>
+          </a>
+          <span
+            class="badge"
+            [class.badge-admin]="user.role === 'admin'"
+            [class.badge-user]="user.role === 'user'"
+          >
+            {{ user.role === 'admin' ? 'Admin' : 'User' }}
+          </span>
+          <button type="button" class="signout" [disabled]="signingOut()" (click)="signOut()">
+            <app-icon name="log-out" [size]="17" />
+            <span>Sign out</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<main class="content">
+  <app-demo-banner class="banner" />
+  <router-outlet />
+</main>

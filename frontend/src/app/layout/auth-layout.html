@@ -1,0 +1,32 @@
+<div class="auth">
+  <section class="intro" aria-label="About this app">
+    <div class="brand">
+      <span class="brand-logo"><app-icon name="shield" [size]="18" /></span>
+      <span>Auth Starter</span>
+    </div>
+
+    <div class="intro-body">
+      <h2>Authentication done properly, ready to build on.</h2>
+      <ul class="features">
+        @for (feature of features; track feature.title) {
+          <li>
+            <span class="feature-icon"><app-icon [name]="feature.icon" [size]="18" /></span>
+            <div>
+              <strong>{{ feature.title }}</strong>
+              <p>{{ feature.text }}</p>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <p class="stack">Angular 21 · FastAPI · JWT · Argon2</p>
+  </section>
+
+  <main class="panel">
+    <app-demo-banner class="banner" />
+    <div class="panel-body">
+      <router-outlet />
+    </div>
+  </main>
+</div>
